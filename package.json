@@ -1,0 +1,38 @@
+{
+  "name": "@optimus/portfolio-analyzer",
+  "version": "0.1.0",
+  "description": "Advanced financial analysis and portfolio optimization tool for AI agents on Solana",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "test": "jest"
+  },
+  "keywords": [
+    "solana",
+    "defi",
+    "portfolio",
+    "analysis",
+    "ai",
+    "agent"
+  ],
+  "author": "Optimus",
+  "license": "MIT",
+  "dependencies": {
+    "@solana/web3.js": "^1.95.0",
+    "@solana/spl-token": "^0.4.0",
+    "jupiter-client": "^1.0.0",
+    "axios": "^1.6.0",
+    "express": "^4.18.0",
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/node": "^20.0.0",
+    "nodemon": "^3.0.0",
+    "ts-node": "^10.9.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0"
+  }
+}
