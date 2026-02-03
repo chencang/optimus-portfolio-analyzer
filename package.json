@@ -1,6 +1,6 @@
 {
   "name": "@optimus/portfolio-analyzer",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Advanced financial analysis and portfolio optimization tool for AI agents on Solana",
   "main": "dist/index.js",
   "scripts": {
@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/express": "^4.17.0",
     "@types/node": "^20.0.0",
+    "@types/axios": "^0.14.0",
     "nodemon": "^3.0.0",
     "ts-node": "^10.9.0",
     "jest": "^29.0.0",

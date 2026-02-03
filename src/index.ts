@@ -1,6 +1,7 @@
 import express from 'express';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 import axios from 'axios';
+import { AdvancedAnalyzer } from './analyzer';
 
 /**
  * Optimus Portfolio Analyzer
@@ -9,9 +10,11 @@ import axios from 'axios';
 export class OptimusAnalyzer {
   private connection: Connection;
   private jupiterApi: string = 'https://quote-api.jup.ag/v6';
+  private advancedAnalyzer: AdvancedAnalyzer;
   
-  constructor(private rpcEndpoint: string = 'https://api.mainnet-beta.solana.com') {
+  constructor(private rpcEndpoint: string = clusterApiUrl('mainnet-beta')) {
     this.connection = new Connection(this.rpcEndpoint, 'confirmed');
+    this.advancedAnalyzer = new AdvancedAnalyzer(this.rpcEndpoint);
   }
 
   /**
@@ -39,23 +42,34 @@ export class OptimusAnalyzer {
       });
     }
 
+    // Get advanced risk metrics
+    const riskMetrics = await this.advancedAnalyzer.calculateRiskMetrics(walletAddress);
+
+    // Get market insights
+    const marketInsights = await this.advancedAnalyzer.getMarketInsights();
+
     return {
       wallet: walletAddress,
       solBalance: solBalance / 1e9, // Convert lamports to SOL
       tokens: tokenBalances,
       timestamp: new Date().toISOString(),
-      analysis: this.generateAnalysis(solBalance / 1e9, tokenBalances)
+      riskMetrics,
+      marketInsights,
+      analysis: this.generateAnalysis(solBalance / 1e9, tokenBalances, riskMetrics)
     };
   }
 
   /**
    * Generate portfolio analysis
    */
-  private generateAnalysis(solBalance: number, tokens: any[]) {
+  private generateAnalysis(solBalance: number, tokens: any[], riskMetrics: any) {
     return {
       riskLevel: this.estimateRiskLevel(solBalance, tokens),
       diversification: this.calculateDiversification(tokens),
-      recommendations: this.generateRecommendations(solBalance, tokens)
+      concentrationRisk: riskMetrics.concentrationRisk,
+      volatilityEstimate: riskMetrics.volatilityEstimate,
+      diversificationScore: riskMetrics.diversificationScore,
+      recommendations: this.generateRecommendations(solBalance, tokens, riskMetrics)
     };
   }
 
@@ -79,7 +93,7 @@ export class OptimusAnalyzer {
   /**
    * Generate recommendations
    */
-  private generateRecommendations(solBalance: number, tokens: any[]) {
+  private generateRecommendations(solBalance: number, tokens: any[], riskMetrics: any) {
     const recommendations = [];
 
     if (solBalance < 1) {
@@ -88,6 +102,19 @@ export class OptimusAnalyzer {
 
     if (tokens.length < 3) {
       recommendations.push('Diversify portfolio with additional assets');
+    }
+
+    // Add recommendations based on risk metrics
+    if (riskMetrics && riskMetrics.concentrationRisk > 0.7) {
+      recommendations.push('High concentration risk detected - consider diversifying into more token types');
+    }
+
+    if (riskMetrics && riskMetrics.diversificationScore < 0.5) {
+      recommendations.push('Portfolio diversification could be improved');
+    }
+
+    if (riskMetrics && riskMetrics.solExposure > 0.7) {
+      recommendations.push('High SOL exposure - consider diversifying into other assets');
     }
 
     return recommendations;
@@ -142,6 +169,52 @@ export class OptimusAnalyzer {
       confidence: 0.75
     };
   }
+
+  /**
+   * Get detailed risk analysis for a portfolio
+   */
+  async getRiskAnalysis(walletAddress: string) {
+    return await this.advancedAnalyzer.calculateRiskMetrics(walletAddress);
+  }
+
+  /**
+   * Generate rebalancing recommendations for a specific wallet
+   */
+  async getPortfolioRebalancingRecommendations(
+    walletAddress: string,
+    strategy: 'conservative' | 'moderate' | 'aggressive' = 'moderate'
+  ) {
+    const targetAllocation = this.getStrategyAllocation(strategy);
+    return await this.advancedAnalyzer.generateRebalancingRecommendations(walletAddress, targetAllocation);
+  }
+
+  /**
+   * Get allocation based on strategy
+   */
+  private getStrategyAllocation(strategy: 'conservative' | 'moderate' | 'aggressive') {
+    switch (strategy) {
+      case 'conservative':
+        return [
+          { token: 'USDC', percentage: 0.50 },
+          { token: 'SOL', percentage: 0.30 },
+          { token: 'other', percentage: 0.20 }
+        ];
+      case 'aggressive':
+        return [
+          { token: 'SOL', percentage: 0.30 },
+          { token: 'growth_tokens', percentage: 0.50 },
+          { token: 'yield_farming', percentage: 0.20 }
+        ];
+      case 'moderate':
+      default:
+        return [
+          { token: 'SOL', percentage: 0.35 },
+          { token: 'USDC', percentage: 0.25 },
+          { token: 'JLP', percentage: 0.20 },
+          { token: 'other', percentage: 0.20 }
+        ];
+    }
+  }
 }
 
 /**
@@ -173,6 +246,25 @@ export function createServer(analyzer: OptimusAnalyzer) {
   app.get('/api/insights/:protocol', async (req, res) => {
     try {
       const result = await analyzer.getMarketInsights(req.params.protocol);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/risk/:address', async (req, res) => {
+    try {
+      const result = await analyzer.getRiskAnalysis(req.params.address);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/rebalance/:address/:strategy?', async (req, res) => {
+    try {
+      const strategy = req.params.strategy as 'conservative' | 'moderate' | 'aggressive' || 'moderate';
+      const result = await analyzer.getPortfolioRebalancingRecommendations(req.params.address, strategy);
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
