@@ -5,9 +5,9 @@ Advanced financial analysis and portfolio optimization tool for AI agents on Sol
 ## Features
 
 - Real-time portfolio tracking across Solana DeFi protocols
-- Risk-adjusted return analysis
-- Automated rebalancing recommendations
-- Predictive market insights using AI
+- Advanced risk metrics calculation (concentration risk, volatility, diversification)
+- Automated rebalancing recommendations with cost estimation
+- Market intelligence from Jupiter and Pyth
 - Integration with major Solana protocols (Jupiter, Kamino, Drift, Pyth)
 
 ## Architecture
@@ -20,19 +20,20 @@ Advanced financial analysis and portfolio optimization tool for AI agents on Sol
        │                       │                        │
        ▼                       ▼                        ▼
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Analysis &     │    │  Historical      │    │  Jupiter        │
-│  Predictions    │    │  Data Store      │    │  Kamino         │
-└─────────────────┘    └──────────────────┘    │  Drift          │
-                                                │  Pyth           │
+│  Analysis &     │    │  Risk Metrics    │    │  Jupiter        │
+│  Predictions    │    │  Calculations    │    │  Pyth           │
+└─────────────────┘    └──────────────────┘    │  Kamino         │
+                                                │  Drift          │
                                                 └─────────────────┘
 ```
 
 ## API Endpoints
 
-- `GET /api/portfolio/:address` - Get portfolio analysis
-- `GET /api/recommendations/:strategy` - Get rebalancing recommendations
-- `GET /api/insights/:protocol` - Get predictive insights
-- `POST /api/optimize` - Optimize portfolio allocation
+- `GET /api/portfolio/:address` - Get comprehensive portfolio analysis
+- `GET /api/risk/:address` - Get detailed risk metrics
+- `GET /api/rebalance/:address/:strategy` - Get rebalancing recommendations (strategy: conservative/moderate/aggressive)
+- `GET /api/insights/:protocol` - Get predictive market insights
+- `GET /api/recommendations/:strategy` - Get general allocation recommendations
 
 ## Installation
 
@@ -40,22 +41,68 @@ Advanced financial analysis and portfolio optimization tool for AI agents on Sol
 npm install @optimus/portfolio-analyzer
 ```
 
+## Local Development
+
+1. Clone the repository:
+```bash
+git clone https://github.com/chencang/optimus-portfolio-analyzer.git
+cd optimus-portfolio-analyzer
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Build the project:
+```bash
+npm run build
+```
+
+4. Run the server:
+```bash
+npm start
+```
+
+The server will start on port 3000 by default.
+
 ## Usage
 
 ```javascript
 import { OptimusAnalyzer } from '@optimus/portfolio-analyzer';
 
 const analyzer = new OptimusAnalyzer({
-  wallet: yourSolanaWallet,
-  apiKey: process.env.OPTIMUS_API_KEY
+  rpcEndpoint: 'https://api.mainnet-beta.solana.com'  // Optional, defaults to mainnet
 });
 
 // Get portfolio analysis
-const analysis = await analyzer.analyzePortfolio();
+const analysis = await analyzer.analyzePortfolio('So11111111111111111111111111111111111111112');
+
+// Get risk analysis
+const riskMetrics = await analyzer.getRiskAnalysis('So11111111111111111111111111111111111111112');
 
 // Get rebalancing recommendations
-const recommendations = await analyzer.getRecommendations();
+const rebalanceRecs = await analyzer.getPortfolioRebalancingRecommendations(
+  'So11111111111111111111111111111111111111112', 
+  'moderate'  // strategy: conservative/moderate/aggressive
+);
 ```
+
+## Integration with Other Projects
+
+The Optimus Portfolio Analyzer is designed to complement other projects in the Solana ecosystem:
+
+- **AgentDEX**: Use our analysis to inform trading decisions
+- **SolanaYield**: Enhance yield strategy selection with risk metrics
+- **AutoVault**: Improve rebalancing decisions with risk analysis
+
+## Deployment
+
+To deploy to Vercel or similar platform, ensure you have:
+
+- Node.js runtime
+- Dependencies from package.json
+- Proper build configuration
 
 ## License
 
